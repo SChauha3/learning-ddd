@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartCharging.Api.Tests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartcharging.Domain", "Smartcharging.Domain\Smartcharging.Domain.csproj", "{528C4A15-F3B6-47B2-8CAC-14EB29A0BC8B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{DA407A63-DC60-404B-A558-4A83E88408BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +34,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3C1D05F0-7B44-4F98-80D1-D220F2EF11C6} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{2C3B9371-5B1D-44DC-94AF-A5CDD6AD390B} = {DA407A63-DC60-404B-A558-4A83E88408BE}
+		{528C4A15-F3B6-47B2-8CAC-14EB29A0BC8B} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E2D1F7AD-D45B-4A2D-8C16-8037E2EB02B6}
