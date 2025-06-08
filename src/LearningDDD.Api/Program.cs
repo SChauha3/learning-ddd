@@ -1,9 +1,9 @@
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using LearningDDD.Api;
-using LearningDDD.Api.Data;
 using LearningDDD.Api.Endpoints;
 using LearningDDD.Api.Extensions;
+using LearningDDD.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -3,12 +3,13 @@ using FluentValidation.AspNetCore;
 using LearningDDD.Api.Dtos.ChargeStation;
 using LearningDDD.Api.Dtos.Connector;
 using LearningDDD.Api.Dtos.Group;
-using LearningDDD.Api.Models;
-using LearningDDD.Api.Repositories;
 using LearningDDD.Api.Services.ChargeStations;
 using LearningDDD.Api.Services.Connectors;
 using LearningDDD.Api.Services.Groups;
 using LearningDDD.Api.Validators;
+using LearningDDD.Domain.Models;
+using LearningDDD.Domain.Ports;
+using LearningDDD.Infrastructure.Persistent;
 
 namespace LearningDDD.Api.Extensions
 {

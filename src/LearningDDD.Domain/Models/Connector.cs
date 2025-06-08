@@ -1,20 +1,20 @@
-﻿namespace LearningDDD.Domain.Models
+﻿using LearningDDD.Domain.SeedWork;
+
+namespace LearningDDD.Domain.Models
 {
-    public class Connector
+    public class Connector : Entity<Guid>
     {
-        public Guid Id { get; private set; }
         public int ChargeStationContextId { get; private set; }
         public int MaxCurrent { get; private set; }
 
-        private Connector(int chargeStationContextId, int maxCurrent)
+        private Connector(Guid id, int chargeStationContextId, int maxCurrent) : base(id)
         {
-            Id = Guid.NewGuid();
             ChargeStationContextId = chargeStationContextId;
             MaxCurrent = maxCurrent;
         }
 
-        internal static Connector Create(int chargeStationContextId, int maxCurrent) => 
-            new Connector(chargeStationContextId, maxCurrent);
+        internal static Connector Create(int chargeStationContextId, int maxCurrent) =>
+            new Connector(Guid.NewGuid(), chargeStationContextId, maxCurrent);
 
         internal void UpdateMaxCurrent(int newMaxCurrent) =>
             MaxCurrent = newMaxCurrent;

@@ -1,18 +1,17 @@
-﻿namespace LearningDDD.Domain.Models
+﻿using LearningDDD.Domain.SeedWork;
+
+namespace LearningDDD.Domain.Models
 {
-    public class Group
+    public class Group : Entity<Guid>, IAggregateRoot
     {
         private readonly List<ChargeStation> _chargeStations = new();
-
-        public Guid Id { get; private set; }
         public string Name { get; private set; }
         public int Capacity { get; private set; }
 
         public IReadOnlyCollection<ChargeStation> ChargeStations => _chargeStations.AsReadOnly();
 
-        private Group(Guid id, string name, int capacity)
+        private Group(Guid id, string name, int capacity) : base(id)
         {
-            Id = id;
             Name = name;
             Capacity = capacity;
         }
@@ -26,24 +25,6 @@
             return new Group(Guid.NewGuid(), name, capacity);
         }
 
-        public Guid AddChargeStation(string name, IEnumerable<(int chargeStationContextId, int maxCurrent)> connectors)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Charge station name is required.");
-
-            if (connectors == null)
-                throw new ArgumentNullException(nameof(connectors));
-
-            var newConnectors = connectors.Select(c => Connector.Create(c.chargeStationContextId, c.maxCurrent)).ToList();
-
-            ConnectorValidator.Validate(newConnectors);
-            
-            var chargeStation = ChargeStation.Create(name, newConnectors);
-            
-            _chargeStations.Add(chargeStation);
-            return chargeStation.Id;
-        }
-
         public bool TryUpdate(string name, int newCapacity)
         {
             if (!CanUpdateCapacity(newCapacity))
@@ -55,30 +36,78 @@
             return true;
         }
 
+        public Guid AddChargeStation(string name, IEnumerable<(int chargeStationContextId, int maxCurrent)> connectors)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Charge station name is required.");
+
+            if (connectors == null)
+                throw new ArgumentNullException(nameof(connectors));
+
+            var newConnectors = connectors.Select(c => Connector.Create(c.chargeStationContextId, c.maxCurrent)).ToList();
+
+            ConnectorValidator.Validate(newConnectors);
+
+            var chargeStation = ChargeStation.Create(name, newConnectors);
+
+            _chargeStations.Add(chargeStation);
+            return chargeStation.Id;
+        }
+
+        public void UpdateChargeStation(Guid chargeStationId, string newName)
+        {
+            var chargeStation = _chargeStations.FirstOrDefault(cs => cs.Id == chargeStationId);
+            if (chargeStation is null)
+                throw new ArgumentException("Charge station with id {chargeStationId} not found in this group.");
+
+            // Add Group-level invariants here if needed (e.g., no duplicate names within the group)
+            if (_chargeStations.Where(cs => cs.Id != chargeStationId).Any(cs => cs.Name.Equals(newName, StringComparison.OrdinalIgnoreCase)))
+                throw new ArgumentException($"A charge station with name '{newName}' already exists in this group.");
+            
+            // Delegate the update to the ChargeStation entity itself
+            chargeStation.UpdateName(newName);
+        }
+
         public void RemoveChargeStation(Guid chargeStationId)
         {
             var station = _chargeStations.FirstOrDefault(s => s.Id == chargeStationId);
-            if (station != null)
-            {
+            if (station is not null)
                 _chargeStations.Remove(station);
-            }
         }
 
-        private bool CanUpdateCapacity(int newCapacity)
+        private bool CanUpdateCapacity(int newCapacity) =>
+            newCapacity >= GetTotalUsedCurrent();
+
+
+        //private bool CanAddConnectors(IEnumerable<Connector> newConnectors)
+        //{
+        //    var totalNewCurrent = newConnectors.Sum(c => c.MaxCurrent);
+        //    var currentTotal = GetTotalUsedCurrent();
+        //    return currentTotal + totalNewCurrent <= Capacity;
+        //}
+
+        public bool CanAddConnector(int maxCurrent) =>
+            GetTotalUsedCurrent() + maxCurrent < Capacity;
+        
+
+        private decimal GetTotalUsedCurrent() =>
+            _chargeStations.Sum(s => s.GetCurrentLoad());
+
+        public bool IsChargeStationContextIdUnique(int ChargeStationContextId, Guid chargeStationId)
         {
-            return newCapacity >= GetTotalUsedCurrent();
+            var chargeStation = _chargeStations.FirstOrDefault(cs => cs.Id == chargeStationId);
+            if (chargeStation is null)
+                throw new ArgumentException("Charge station with id {chargeStationId} not found in this group.");
+
+            return !chargeStation.Connectors.Where(c => c.ChargeStationContextId == ChargeStationContextId).Any();
         }
 
-        private bool CanAddConnectors(IEnumerable<Connector> newConnectors)
+        public Guid AddConnectorToChargeStation(int chargeStationContextId, int maxCurrent, Guid chargeStationId)
         {
-            var totalNewCurrent = newConnectors.Sum(c => c.MaxCurrent);
-            var currentTotal = GetTotalUsedCurrent();
-            return currentTotal + totalNewCurrent <= Capacity;
-        }
-
-        internal decimal GetTotalUsedCurrent()
-        {
-            return _chargeStations.Sum(s => s.GetCurrentLoad());
+            var chargeStation = ChargeStations.Where(cs => cs.Id == chargeStationId).FirstOrDefault();
+            var connector = Connector.Create(chargeStationContextId, maxCurrent);
+            chargeStation?.AddConnector(connector);
+            return connector.Id;
         }
     }
 }

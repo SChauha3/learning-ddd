@@ -1,30 +1,33 @@
-﻿namespace LearningDDD.Domain.Models
+﻿using LearningDDD.Domain.SeedWork;
+
+namespace LearningDDD.Domain.Models
 {
-    public class ChargeStation
+    public class ChargeStation : Entity<Guid>
     {
         private readonly List<Connector> _connectors = new();
 
-        public Guid Id { get; private set; }
         public string Name { get; private set; }
 
         public IReadOnlyCollection<Connector> Connectors => _connectors.AsReadOnly();
 
-        private ChargeStation(string name, IList<Connector> connectors)
+        private ChargeStation(Guid id, string name, IList<Connector> connectors) : base(id)
         {
-            Id = Guid.NewGuid();
             Name = name;
             _connectors = connectors.ToList();
         }
 
-        internal static ChargeStation Create(string name , IList<Connector> connectors) =>
-            new ChargeStation(name, connectors);
-            
-        internal void Update(string name)
+        internal static ChargeStation Create(string name, IList<Connector> connectors) =>
+            new ChargeStation(Guid.NewGuid(), name, connectors);
+
+        internal void UpdateName(string name)
         {
             Name = name;
         }
 
         internal int GetCurrentLoad() =>
             Connectors.Sum(c => c.MaxCurrent);
+
+        internal void AddConnector(Connector connector) =>
+            _connectors.Add(connector);
     }
 }

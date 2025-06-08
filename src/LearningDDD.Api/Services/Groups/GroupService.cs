@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using LearningDDD.Api.Dtos.Group;
 using LearningDDD.Api.Dtos.Outgoing;
-using LearningDDD.Api.Repositories;
-using Group = LearningDDD.Api.Models.Group;
+using LearningDDD.Domain.Ports;
+using LearningDDD.Domain.Models;
 
 namespace LearningDDD.Api.Services.Groups
 {
@@ -28,9 +28,13 @@ namespace LearningDDD.Api.Services.Groups
 
         public async Task<Result> UpdateGroupAsync(Guid id, UpdateGroup updateGroup)
         {
-            var group = await GetGroupAsync(id);
+            var group = await _groupRepository.FindAsync(
+                g => g.Id == id,
+                query => query
+                .Include(g => g.ChargeStations)
+                .ThenInclude(cs => cs.Connectors));
 
-            if (group == null)
+            if (group is null)
                 return Result.Fail($"Could not find group with Id {id}.", ErrorType.NotFound);
 
             if (!group.TryUpdate(updateGroup.Name, updateGroup.Capacity))
@@ -43,7 +47,7 @@ namespace LearningDDD.Api.Services.Groups
         public async Task<Result> DeleteGroupAsync(Guid id)
         {
             var storedGroup = await _groupRepository.FindByIdAsync(id);
-            if (storedGroup == null)
+            if (storedGroup is null)
                 return Result.Fail($"group not found with Group Id {id}", ErrorType.NotFound);
 
             await _groupRepository.DeleteAsync(storedGroup);
@@ -78,11 +82,5 @@ namespace LearningDDD.Api.Services.Groups
             }).ToList()
         };
 
-        private async Task<Group?> GetGroupAsync(Guid id) =>
-            await _groupRepository.FindAsync(
-                g => g.Id == id,
-                query => query
-                .Include(g => g.ChargeStations)
-                .ThenInclude(cs => cs.Connectors));
     }
 }
