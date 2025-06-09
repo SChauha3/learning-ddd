@@ -1,9 +1,7 @@
-using FluentValidation.AspNetCore;
-using Microsoft.EntityFrameworkCore;
 using LearningDDD.Api;
 using LearningDDD.Api.Endpoints;
 using LearningDDD.Api.Extensions;
-using LearningDDD.Infrastructure.Data;
+using LearningDDD.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,12 +13,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=app.db"));
-
 builder.Services.AddValidators();
 builder.Services.AddAppServices();
 builder.Services.AddRepositories();
+builder.Services.AddSqlLite();
 
 var app = builder.Build();
 

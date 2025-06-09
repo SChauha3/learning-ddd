@@ -6,6 +6,6 @@ namespace LearningDDD.Api.Services.Connectors
     {
         Task<Result<Guid>> CreateConnectorAsync(CreateConnector connectorDto);
         Task<Result> UpdateConnectorAsync(Guid id, UpdateConnector updateConnector);
-        Task<Result> DeleteConnectorAsync(Guid id);
+        //Task<Result> DeleteConnectorAsync(Guid id);
     }
 }

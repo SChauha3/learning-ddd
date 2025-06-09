@@ -1,19 +1,9 @@
 // csharp
-using System;
-using System.Net;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
-using LearningDDD.Api;
-using LearningDDD.Api.Dtos.Group;
-using LearningDDD.Api.Dtos.ChargeStation;
-using LearningDDD.Api.Dtos.Connector;
-using LearningDDD.Api.Data;
-using LearningDDD.Api.Models;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
+using LearningDDD.Infrastructure.Data;
 
 namespace LearningDDD.Api.Endpoints
 {

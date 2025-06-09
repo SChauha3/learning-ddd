@@ -1,5 +1,4 @@
 ﻿using LearningDDD.Api.Dtos.ChargeStation;
-using LearningDDD.Api.Dtos.Outgoing;
 using LearningDDD.Domain.Models;
 using LearningDDD.Domain.Ports;
 using Microsoft.EntityFrameworkCore;

@@ -109,5 +109,22 @@ namespace LearningDDD.Domain.Models
             chargeStation?.AddConnector(connector);
             return connector.Id;
         }
+
+        public bool CanUpdateMaxCurrent(int maxCurrent, int existingConnectorCurrent)
+        {
+            return Capacity > GetTotalUsedCurrent() + maxCurrent - existingConnectorCurrent;
+        }
+
+        public bool UpdateConnectorMaxCurrent(int maxCurrent, Guid chargeStationId, Guid connectorId)
+        {
+            var chargeStation = ChargeStations.Where(cs => cs.Id == chargeStationId).FirstOrDefault();
+            var connector = chargeStation?.Connectors.Where(c => c.Id == connectorId).FirstOrDefault();
+
+            if (!CanUpdateMaxCurrent(maxCurrent, connector.MaxCurrent))
+                return false;
+
+            connector?.UpdateMaxCurrent(maxCurrent);
+            return true;
+        }
     }
 }

@@ -84,11 +84,11 @@ namespace LearningDDD.Api.Endpoints
             }).AddFluentValidationAutoValidation();
 
             //Remove Connector
-            builder.MapDelete("/connectors/{connectorId}", async (Guid connectorId, IConnectorService connectorService) =>
-            {
-                var result = await connectorService.DeleteConnectorAsync(connectorId);
-                return result.ToApiResult();
-            }).AddFluentValidationAutoValidation();
+            //builder.MapDelete("/connectors/{connectorId}", async (Guid connectorId, IConnectorService connectorService) =>
+            //{
+            //    var result = await connectorService.DeleteConnectorAsync(connectorId);
+            //    return result.ToApiResult();
+            //}).AddFluentValidationAutoValidation();
 
             return builder;
         }

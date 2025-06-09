@@ -7,23 +7,16 @@ namespace LearningDDD.Api.Services.Connectors
 {
     public class ConnectorService : IConnectorService
     {
-        private readonly IRepository<Group> _groupStationRepository;
-        private readonly IRepository<ChargeStation> _chargeStationRepository;
-        private readonly IRepository<Connector> _connectorRepository;
+        private readonly IRepository<Group> _groupRepository;
 
-        public ConnectorService(
-            IRepository<Group> groupStationRepository,
-            IRepository<ChargeStation> chargeStationRepository,
-            IRepository<Connector> connectorRepository)
+        public ConnectorService(IRepository<Group> groupRepository)
         {
-            _groupStationRepository = groupStationRepository;
-            _chargeStationRepository = chargeStationRepository;
-            _connectorRepository = connectorRepository;
+            _groupRepository = groupRepository;
         }
 
         public async Task<Result<Guid>> CreateConnectorAsync(CreateConnector createConnector)
         {
-            var group = await _groupStationRepository.FindAsync(
+            var group = await _groupRepository.FindAsync(
                 cs => cs.Id == Guid.Parse(createConnector.GroupId),
                 cs => cs.Include(c => c.ChargeStations));
 
@@ -42,51 +35,52 @@ namespace LearningDDD.Api.Services.Connectors
                 createConnector.MaxCurrent,
                 Guid.Parse(createConnector.ChargeStationId));
 
-            await _groupStationRepository.AddAsync(group);
+            await _groupRepository.AddAsync(group);
             return Result<Guid>.Success(connectorId);
         }
 
         public async Task<Result> UpdateConnectorAsync(Guid id, UpdateConnector updateConnector)
         {
-            var connector = await _connectorRepository.FindAsync(
-                c => c.Id == id,
+            var group = await _groupRepository.FindAsync(
+                c => c.Id == Guid.Parse(updateConnector.GroupId),
                 query => query
-                    .Include(c => c.ChargeStation)
-                    .ThenInclude(cs => cs.Group)
-                    .ThenInclude(cs => cs.ChargeStations)
-                    .ThenInclude(c => c.Connectors));
+                    .Include(c => c.ChargeStations)
+                    .ThenInclude(cs => cs.Connectors));
 
-            if (connector is null)
-                return Result.Fail($"A Connector with id {id} does not exist.", ErrorType.NotFound);
+            if (group is null)
+                return Result.Fail($"A Connector with id {id} does not belong to existing chargeStation.", ErrorType.NotFound);
 
-            if (!connector.CanUpdateMaxCurrent(updateConnector.MaxCurrent))
+            var result = group.UpdateConnectorMaxCurrent(
+                updateConnector.MaxCurrent,
+                Guid.Parse(updateConnector.ChargeStationId),
+                id);
+
+            if (!result)
                 return Result.Fail("Total connector max current would exceed group's capacity.", ErrorType.InValidCapacity);
 
-            connector.UpdateMaxCurrent(updateConnector.MaxCurrent);
-
-            await _connectorRepository.UpdateAsync(connector);
+            await _groupRepository.UpdateAsync(group);
             return Result.Success();
         }
 
-        public async Task<Result> DeleteConnectorAsync(Guid id)
-        {
-            var connector = await _connectorRepository.FindAsync(
-                c => c.Id == id,
-                query => query
-                    .Include(c => c.ChargeStation)
-                    .ThenInclude(cs => cs.Group)
-                    .Include(c => c.ChargeStation.Connectors));
+        //public async Task<Result> DeleteConnectorAsync(Guid id)
+        //{
+        //    var connector = await _connectorRepository.FindAsync(
+        //        c => c.Id == id,
+        //        query => query
+        //            .Include(c => c.ChargeStation)
+        //            .ThenInclude(cs => cs.Group)
+        //            .Include(c => c.ChargeStation.Connectors));
 
-            if (connector is null)
-                return Result.Fail($"Connector not found with id {id}.", ErrorType.NotFound);
+        //    if (connector is null)
+        //        return Result.Fail($"Connector not found with id {id}.", ErrorType.NotFound);
 
-            if (!connector.ChargeStation.CanRemoveConnector())
-                return Result.Fail("At least one connector is required per charge station.", ErrorType.MinimumOneConnector);
+        //    if (!connector.ChargeStation.CanRemoveConnector())
+        //        return Result.Fail("At least one connector is required per charge station.", ErrorType.MinimumOneConnector);
 
-            connector.ChargeStation.RemoveConnector(connector);
+        //    connector.ChargeStation.RemoveConnector(connector);
 
-            await _connectorRepository.DeleteAsync(connector);
-            return Result.Success();
-        }
+        //    await _connectorRepository.DeleteAsync(connector);
+        //    return Result.Success();
+        //}
     }
 }

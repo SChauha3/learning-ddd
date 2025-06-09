@@ -55,13 +55,6 @@ namespace LearningDDD.Infrastructure.Data
                 builder.HasKey(c => c.Id);
                 builder.Property(c => c.MaxCurrent).IsRequired();
 
-                builder.Property<int>("ChargeStationId");
-
-                builder
-                .HasOne<ChargeStation>()
-                .WithMany()
-                .HasForeignKey("ChargeStationId");
-
                 builder
                 .HasIndex("ChargeStationContextId", "ChargeStationId")
                 .IsUnique();

@@ -9,6 +9,7 @@ namespace LearningDDD.Domain.Models
         public string Name { get; private set; }
 
         public IReadOnlyCollection<Connector> Connectors => _connectors.AsReadOnly();
+        private ChargeStation() { }
 
         private ChargeStation(Guid id, string name, IList<Connector> connectors) : base(id)
         {
