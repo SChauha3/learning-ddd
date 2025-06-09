@@ -10,7 +10,7 @@ namespace LearningDDD.Infrastructure.Extensions
         {
             // Register the DbContext with SQLite provider
             services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlite("Data Source=app.db"));
+                options.UseSqlite("Data Source=../LearningDDD.Infrastructure/app.db"));
             return services;
         }
     }
