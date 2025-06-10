@@ -27,27 +27,27 @@ namespace LearningDDD.Api.Endpoints
             var groupsApi = builder.MapGroup("/groups")
             .AddFluentValidationAutoValidation(); // Apply to all endpoints in this group
 
-            builder.MapPost("/", async (CreateGroup createGroup, IGroupService groupService) =>
+            groupsApi.MapPost("/", async (CreateGroup createGroup, IGroupService groupService) =>
             {
                 var result = await groupService.CreateGroupAsync(createGroup);
 
                 return result.ToApiResult("/groups", true);
             });
 
-            builder.MapPut("/{id}", async (Guid id, UpdateGroup updateGroup, IGroupService groupService) =>
+            groupsApi.MapPut("/{id}", async (Guid id, UpdateGroup updateGroup, IGroupService groupService) =>
             {
                 var result = await groupService.UpdateGroupAsync(id, updateGroup);
                 return result.ToApiResult("/groups");
             });
 
-            builder.MapGet("/", async (IGroupService groupService) =>
+            groupsApi.MapGet("/", async (IGroupService groupService) =>
             {
                 var result = await groupService.GetGroupsAsync();
                 return result.ToApiResult("/groups");
             });
 
             //Remove Group
-            builder.MapDelete("/{id}", async (Guid id, IGroupService groupService) =>
+            groupsApi.MapDelete("/{id}", async (Guid id, IGroupService groupService) =>
             {
                 var result = await groupService.DeleteGroupAsync(id);
                 return result.ToApiResult("/groups");
@@ -60,19 +60,19 @@ namespace LearningDDD.Api.Endpoints
             .AddFluentValidationAutoValidation();
 
             //Add ChargeStation
-            builder.MapPost("/", async (CreateChargeStation createChargeStation, IChargeStationService chargeStationService) =>
+            chargeStationsApi.MapPost("/", async (CreateChargeStation createChargeStation, IChargeStationService chargeStationService) =>
             {
                 var result = await chargeStationService.CreateChargeStationAsync(createChargeStation);
                 return result.ToApiResult("/chargestations", true);
             });
 
-            //builder.MapGet("/chargestations", async (AppDbContext appDbContext) =>
+            //chargeStationsApi.MapGet("/chargestations", async (AppDbContext appDbContext) =>
             //{
             //    return appDbContext.ChargeStations;
             //});
 
             //Update ChargeStation
-            builder.MapPut("/{id}", async (
+            chargeStationsApi.MapPut("/{id}", async (
                 Guid id,
                 UpdateChargeStation updateChargeStation,
                 IChargeStationService chargeStationService) =>
@@ -82,7 +82,7 @@ namespace LearningDDD.Api.Endpoints
             });
 
             //Remove ChargeStation
-            builder.MapDelete("/{id}", async (Guid id, Guid groupId, IChargeStationService chargeStationService) =>
+            chargeStationsApi.MapDelete("/{id}", async (Guid id, Guid groupId, IChargeStationService chargeStationService) =>
             {
                 var result = await chargeStationService.DeleteChargeStationAsync(id, groupId);
                 return result.ToApiResult("/chargestations");
@@ -95,21 +95,21 @@ namespace LearningDDD.Api.Endpoints
             .AddFluentValidationAutoValidation();
 
             //Add Connector
-            builder.MapPost("/", async (CreateConnector createConnector, IConnectorService connectorService, IServiceProvider serviceProvider) =>
+            connectorsApi.MapPost("/", async (CreateConnector createConnector, IConnectorService connectorService, IServiceProvider serviceProvider) =>
             {
                 var result = await connectorService.CreateConnectorAsync(createConnector);
                 return result.ToApiResult("/connectors", true);
             });
 
             //Update Connector
-            builder.MapPut("/{id}", async (Guid id, UpdateConnector updateConnector, IConnectorService connectorService) =>
+            connectorsApi.MapPut("/{id}", async (Guid id, UpdateConnector updateConnector, IConnectorService connectorService) =>
             {
                 var result = await connectorService.UpdateConnectorAsync(id, updateConnector);
                 return result.ToApiResult("/connectors");
             });
 
             //Remove Connector
-            builder.MapDelete("/{connectorId}", async (Guid connectorId, Guid chargeStationId, Guid groupId, IConnectorService connectorService) =>
+            connectorsApi.MapDelete("/{connectorId}", async (Guid connectorId, Guid chargeStationId, Guid groupId, IConnectorService connectorService) =>
             {
                 var result = await connectorService.DeleteConnectorAsync(connectorId, chargeStationId, groupId);
                 return result.ToApiResult("/connectors");

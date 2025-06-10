@@ -6,7 +6,6 @@ using LearningDDD.Infrastructure.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
@@ -32,8 +31,6 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = "swagger"; // This means you'll access the UI at /swagger
     });
 }
-
-//app.UseHttpsRedirection();
 
 app.MapEndpoints();
 
