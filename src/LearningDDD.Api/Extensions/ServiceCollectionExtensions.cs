@@ -7,8 +7,9 @@ using LearningDDD.Api.Services.ChargeStations;
 using LearningDDD.Api.Services.Connectors;
 using LearningDDD.Api.Services.Groups;
 using LearningDDD.Api.Validators;
+using LearningDDD.Domain.Interfaces;
 using LearningDDD.Domain.Models;
-using LearningDDD.Domain.Ports;
+using LearningDDD.Infrastructure.Data;
 using LearningDDD.Infrastructure.Persistent;
 
 namespace LearningDDD.Api.Extensions
@@ -41,10 +42,11 @@ namespace LearningDDD.Api.Extensions
 
         public static IServiceCollection AddRepositories(this IServiceCollection services)
         {
-            services
-                .AddTransient<IRepository<Group>, Repository<Group>>()
-                .AddTransient<IRepository<ChargeStation>, Repository<ChargeStation>>()
-                .AddTransient<IRepository<Connector>, Repository<Connector>>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            //services
+            //    .AddTransient<IRepository<Group>, Repository<Group>>()
+            //    .AddTransient<IRepository<ChargeStation>, Repository<ChargeStation>>()
+            //    .AddTransient<IRepository<Connector>, Repository<Connector>>();
 
             return services;
         }

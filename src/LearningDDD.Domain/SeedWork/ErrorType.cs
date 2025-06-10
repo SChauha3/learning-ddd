@@ -16,6 +16,7 @@
         UniqueConnector,
         CapacityNotGreaterThanUsedCurrent,
 
+        InvalidId,
         Unknown
     }
 }

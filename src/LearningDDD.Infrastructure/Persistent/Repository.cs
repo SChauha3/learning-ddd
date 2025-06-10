@@ -1,4 +1,4 @@
-﻿using LearningDDD.Domain.Ports;
+﻿using LearningDDD.Domain.Interfaces;
 using LearningDDD.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -46,19 +46,16 @@ namespace LearningDDD.Infrastructure.Persistent
         public async Task AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
-            await _appDbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(T entity)
+        public void Update(T entity)
         {
             _dbSet.Update(entity);
-            await _appDbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(T entity)
+        public void Delete(T entity)
         {
             _appDbContext.Remove(entity);
-            await _appDbContext.SaveChangesAsync();
         }
     }
 }

@@ -1,27 +1,32 @@
-﻿using Microsoft.EntityFrameworkCore;
-using LearningDDD.Api.Dtos.Connector;
-using LearningDDD.Domain.Ports;
+﻿using LearningDDD.Api.Dtos.Connector;
+using LearningDDD.Domain.Interfaces;
 using LearningDDD.Domain.Models;
 using LearningDDD.Domain.SeedWork;
+using Microsoft.EntityFrameworkCore;
 
 namespace LearningDDD.Api.Services.Connectors
 {
     public class ConnectorService : IConnectorService
     {
-        private readonly IRepository<Group> _groupRepository;
-        private readonly IRepository<Connector> _connectorRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ConnectorService(IRepository<Group> groupRepository, IRepository<Connector> connectorRepository)
+        public ConnectorService(IUnitOfWork unitOfWork)
         {
-            _connectorRepository = connectorRepository;
-            _groupRepository = groupRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result<Connector>> CreateConnectorAsync(CreateConnector createConnector)
         {
-            var group = await _groupRepository.FindAsync(
-                cs => cs.Id == Guid.Parse(createConnector.GroupId),
-                cs => cs.Include(c => c.ChargeStations));
+            var isGroupIdValidGuid = Guid.TryParse(createConnector.GroupId, out var parsedGroupId);
+            var isChargeStationIdValidGuid = Guid.TryParse(createConnector.ChargeStationId, out var parsedChargeStationId);
+            if (!isGroupIdValidGuid || !isChargeStationIdValidGuid)
+                return Result<Connector>.Fail(
+                    "The provided GroupId or ChargeStationId is not a valid GUID.",
+                    ErrorType.InvalidId);
+
+            var group = await _unitOfWork.Groups.FindAsync(
+                g => g.Id == parsedGroupId,
+                cs => cs.Include(cs => cs.ChargeStations).ThenInclude(c => c.Connectors));
 
             if (group is null)
                 return Result<Connector>.Fail(
@@ -31,49 +36,58 @@ namespace LearningDDD.Api.Services.Connectors
             var result = group.AddConnectorToChargeStation(
                 createConnector.ChargeStationContextId,
                 createConnector.MaxCurrent,
-                Guid.Parse(createConnector.ChargeStationId));
+                parsedChargeStationId);
 
-            await _groupRepository.AddAsync(group);
+            if (result.IsSuccess)
+                await _unitOfWork.SaveChangesAsync();
+
             return result;
         }
 
-        public async Task<Result<bool>> UpdateConnectorAsync(Guid id, UpdateConnector updateConnector)
+        public async Task<Result<bool>> UpdateConnectorAsync(Guid connectorId, UpdateConnector updateConnector)
         {
-            var group = await _groupRepository.FindAsync(
-                c => c.Id == Guid.Parse(updateConnector.GroupId),
+            var isGroupIdValidGuid = Guid.TryParse(updateConnector.GroupId, out var parsedGroupId);
+            var isChargeStationIdValidGuid = Guid.TryParse(updateConnector.ChargeStationId, out var parsedChargeStationId);
+            if (!isGroupIdValidGuid || !isChargeStationIdValidGuid)
+                return Result<bool>.Fail(
+                    "The provided GroupId or ChargeStationId is not a valid GUID.",
+                    ErrorType.InvalidId);
+
+            var group = await _unitOfWork.Groups.FindAsync(
+                g => g.Id == parsedGroupId,
                 query => query
-                    .Include(c => c.ChargeStations)
-                    .ThenInclude(cs => cs.Connectors));
+                    .Include(cs => cs.ChargeStations)
+                    .ThenInclude(c => c.Connectors));
 
             if (group is null)
-                return Result<bool>.Fail($"A Connector with id {id} does not belong to existing chargeStation.", ErrorType.GroupNotFound);
+                return Result<bool>.Fail($"Group with id {connectorId} not found.", ErrorType.GroupNotFound);
 
             var result = group.UpdateConnector(
                 updateConnector.MaxCurrent,
-                Guid.Parse(updateConnector.ChargeStationId),
-                id);
+                parsedChargeStationId,
+                connectorId);
 
             if (result.IsSuccess)
-                await _groupRepository.UpdateAsync(group);
+                await _unitOfWork.SaveChangesAsync();
 
             return result;
         }
 
-        public async Task<Result<bool>> DeleteConnectorAsync(Guid id, Guid chargeStationId, Guid groupId)
+        public async Task<Result<bool>> DeleteConnectorAsync(Guid connectorId, Guid chargeStationId, Guid groupId)
         {
-            var group = await _groupRepository.FindAsync(
-                c => c.Id == groupId,
+            var group = await _unitOfWork.Groups.FindAsync(
+                g => g.Id == groupId,
                 query => query
-                    .Include(c => c.ChargeStations)
-                    .ThenInclude(cs => cs.Connectors));
+                    .Include(cs => cs.ChargeStations)
+                    .ThenInclude(c => c.Connectors));
             if (group is null)
-                return Result<bool>.Fail($"A Connector with id {id} does not belong to existing chargeStation.", ErrorType.GroupNotFound);
+                return Result<bool>.Fail($"Group with id {groupId} not found.", ErrorType.GroupNotFound);
 
-            var result = group.RemoveConnector(id, chargeStationId);
+            var result = group.RemoveConnector(connectorId, chargeStationId);
             if (!result.IsSuccess || result.Value is null)
                 return Result<bool>.Fail(result.Error ?? "Unknown error occurred.", result.ErrorType ?? ErrorType.Unknown);
 
-            await _connectorRepository.DeleteAsync(result.Value);
+            await _unitOfWork.SaveChangesAsync();
             return Result<bool>.Success(true);
         }
     }
