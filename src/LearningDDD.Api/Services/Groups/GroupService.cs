@@ -30,7 +30,7 @@ namespace LearningDDD.Api.Services.Groups
             return result;
         }
 
-        public async Task<bool> UpdateGroupAsync(Guid id, UpdateGroup updateGroup)
+        public async Task<Result<bool>> UpdateGroupAsync(Guid id, UpdateGroup updateGroup)
         {
             var group = await _groupRepository.FindAsync(
                 g => g.Id == id,
@@ -39,23 +39,23 @@ namespace LearningDDD.Api.Services.Groups
                 .ThenInclude(cs => cs.Connectors));
 
             if (group is null)
-                return false;
+                return Result<bool>.Fail(GroupNotFound, ErrorType.GroupNotFound);
 
             var result = group.Update(updateGroup.Name, updateGroup.Capacity);
             if (result.IsSuccess)
                 await _groupRepository.UpdateAsync(group);
 
-            return result.Value;
+            return result;
         }
 
-        public async Task<bool> DeleteGroupAsync(Guid id)
+        public async Task<Result<bool>> DeleteGroupAsync(Guid id)
         {
-            var storedGroup = await _groupRepository.FindByIdAsync(id);
-            if (storedGroup is null)
-                return false;
+            var group = await _groupRepository.FindByIdAsync(id);
+            if (group is null)
+                return Result<bool>.Fail(GroupNotFound, ErrorType.GroupNotFound);
 
-            await _groupRepository.DeleteAsync(storedGroup);
-            return true;
+            await _groupRepository.DeleteAsync(group);
+            return Result<bool>.Success(true);
         }
 
         public async Task<Result<IEnumerable<CreatedGroup>>> GetGroupsAsync()

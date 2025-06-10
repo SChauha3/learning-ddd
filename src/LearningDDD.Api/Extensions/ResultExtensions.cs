@@ -35,30 +35,5 @@ namespace LearningDDD.Api.Extensions
                 _ => 500
             });
         }
-
-        public static IResult ToApiResult(this Result result)
-        {
-            if (result.IsSuccess)
-                return Results.NoContent();
-
-            return Results.Problem(
-            title: "Resource operation failed",
-            detail: result.Error,
-            statusCode: result.ErrorType switch
-            {
-                ErrorType.GroupNotFound => 404,
-                ErrorType.ChargeStationNotFound => 400,
-                ErrorType.ConnectorNotFound => 400,
-                ErrorType.GroupNameRequired => 400,
-                ErrorType.ChargeStationNameRequired => 400,
-                ErrorType.ChargeStationNameMustBeUnique => 400,
-                ErrorType.ChargeStationWithoutConnector => 400,
-                ErrorType.ConnectorNameRequired => 400,
-                ErrorType.CapacityNotGreaterThanZero => 400,
-                ErrorType.CapacityNotGreaterThanUsedCurrent => 400,
-                ErrorType.UniqueConnector => 409,
-                _ => 500
-            });
-        }
     }
 }

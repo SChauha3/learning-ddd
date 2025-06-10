@@ -37,7 +37,7 @@ namespace LearningDDD.Api.Endpoints
             builder.MapPut("/{id}", async (Guid id, UpdateGroup updateGroup, IGroupService groupService) =>
             {
                 var result = await groupService.UpdateGroupAsync(id, updateGroup);
-                return result.ToApiResult();
+                return result.ToApiResult("/groups");
             });
 
             builder.MapGet("/", async (IGroupService groupService) =>
@@ -50,7 +50,7 @@ namespace LearningDDD.Api.Endpoints
             builder.MapDelete("/{id}", async (Guid id, IGroupService groupService) =>
             {
                 var result = await groupService.DeleteGroupAsync(id);
-                return result.ToApiResult();
+                return result.ToApiResult("/groups");
             });
         }
 
@@ -78,14 +78,14 @@ namespace LearningDDD.Api.Endpoints
                 IChargeStationService chargeStationService) =>
             {
                 var result = await chargeStationService.UpdateChargeStationAsync(id, updateChargeStation);
-                return result.ToApiResult();
+                return result.ToApiResult("/chargestations");
             });
 
             //Remove ChargeStation
-            builder.MapDelete("/{id}", async (Guid id, IChargeStationService chargeStationService) =>
+            builder.MapDelete("/{id}", async (Guid id, Guid groupId, IChargeStationService chargeStationService) =>
             {
-                var result = await chargeStationService.DeleteChargeStationAsync(id);
-                return result.ToApiResult();
+                var result = await chargeStationService.DeleteChargeStationAsync(id, groupId);
+                return result.ToApiResult("/chargestations");
             });
         }
 
@@ -105,15 +105,15 @@ namespace LearningDDD.Api.Endpoints
             builder.MapPut("/{id}", async (Guid id, UpdateConnector updateConnector, IConnectorService connectorService) =>
             {
                 var result = await connectorService.UpdateConnectorAsync(id, updateConnector);
-                return result.ToApiResult();
+                return result.ToApiResult("/connectors");
             });
 
             //Remove Connector
-            //builder.MapDelete("/{connectorId}", async (Guid connectorId, IConnectorService connectorService) =>
-            //{
-            //    var result = await connectorService.DeleteConnectorAsync(connectorId);
-            //    return result.ToApiResult();
-            //});
+            builder.MapDelete("/{connectorId}", async (Guid connectorId, Guid chargeStationId, Guid groupId, IConnectorService connectorService) =>
+            {
+                var result = await connectorService.DeleteConnectorAsync(connectorId, chargeStationId, groupId);
+                return result.ToApiResult("/connectors");
+            });
         }
     }
 }
