@@ -30,5 +30,15 @@ namespace LearningDDD.Domain.Models
 
         internal void AddConnector(Connector connector) =>
             _connectors.Add(connector);
+
+        internal Result<Connector> RemoveConnector(Guid connectorId)
+        {
+            var connector = Connectors.FirstOrDefault(c => c.Id == connectorId);
+            if (connector is null)
+                return Result<Connector>.Fail("Connector cannot be null.", ErrorType.ConnectorNotFound);
+
+            _connectors.Remove(connector);
+            return Result<Connector>.Success(connector);
+        }
     }
 }

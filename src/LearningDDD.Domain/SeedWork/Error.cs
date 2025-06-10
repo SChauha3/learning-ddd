@@ -1,4 +1,4 @@
-﻿namespace LearningDDD.Api.Services
+﻿namespace LearningDDD.Domain.SeedWork
 {
     public class Error
     {

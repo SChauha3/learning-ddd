@@ -1,11 +1,13 @@
 ﻿using LearningDDD.Api.Dtos.ChargeStation;
+using LearningDDD.Domain.Models;
+using LearningDDD.Domain.SeedWork;
 
 namespace LearningDDD.Api.Services.ChargeStations
 {
     public interface IChargeStationService
     {
-        Task<Result<Guid>> CreateChargeStationAsync(CreateChargeStation createChargeStation);
-        Task<Result> UpdateChargeStationAsync(Guid id, UpdateChargeStation updateChargeStation);
-        Task<Result> DeleteChargeStationAsync(Guid id);
+        Task<Result<ChargeStation>> CreateChargeStationAsync(CreateChargeStation createChargeStation);
+        Task<Result<bool>> UpdateChargeStationAsync(Guid id, UpdateChargeStation updateChargeStation);
+        Task<Result<bool>> DeleteChargeStationAsync(Guid id, Guid groupId);
     }
 }

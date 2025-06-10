@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace LearningDDD.Api.Dtos.Outgoing
+namespace LearningDDD.Api.Dtos.Connector
 {
     public class CreatedConnector
     {

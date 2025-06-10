@@ -1,4 +1,6 @@
-﻿namespace LearningDDD.Api.Dtos.Outgoing
+﻿using LearningDDD.Api.Dtos.ChargeStation;
+
+namespace LearningDDD.Api.Dtos.Group
 {
     public class CreatedGroup
     {

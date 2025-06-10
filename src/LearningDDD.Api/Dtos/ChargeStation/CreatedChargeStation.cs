@@ -1,4 +1,6 @@
-﻿namespace LearningDDD.Api.Dtos.Outgoing
+﻿using LearningDDD.Api.Dtos.Connector;
+
+namespace LearningDDD.Api.Dtos.ChargeStation
 {
     public class CreatedChargeStation
     {

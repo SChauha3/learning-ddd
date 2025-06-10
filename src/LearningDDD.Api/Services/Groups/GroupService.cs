@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using LearningDDD.Api.Dtos.Group;
-using LearningDDD.Api.Dtos.Outgoing;
 using LearningDDD.Domain.Ports;
 using LearningDDD.Domain.Models;
+using LearningDDD.Domain.SeedWork;
+using LearningDDD.Api.Dtos.ChargeStation;
+using LearningDDD.Api.Dtos.Connector;
 
 namespace LearningDDD.Api.Services.Groups
 {
@@ -18,15 +20,17 @@ namespace LearningDDD.Api.Services.Groups
             _groupRepository = groupRepository;
         }
 
-        public async Task<Result<Guid>> CreateGroupAsync(CreateGroup createGroup)
+        public async Task<Result<Group>> CreateGroupAsync(CreateGroup createGroup)
         {
-            var group = Group.Create(createGroup.Name, createGroup.Capacity);
+            var result = Group.Create(createGroup.Name, createGroup.Capacity);
 
-            await _groupRepository.AddAsync(group);
-            return Result<Guid>.Success(group.Id);
+            if (result.IsSuccess && result.Value is not null)
+                await _groupRepository.AddAsync(result.Value);
+
+            return result;
         }
 
-        public async Task<Result> UpdateGroupAsync(Guid id, UpdateGroup updateGroup)
+        public async Task<bool> UpdateGroupAsync(Guid id, UpdateGroup updateGroup)
         {
             var group = await _groupRepository.FindAsync(
                 g => g.Id == id,
@@ -35,23 +39,23 @@ namespace LearningDDD.Api.Services.Groups
                 .ThenInclude(cs => cs.Connectors));
 
             if (group is null)
-                return Result.Fail($"Could not find group with Id {id}.", ErrorType.NotFound);
+                return false;
 
-            if (!group.TryUpdate(updateGroup.Name, updateGroup.Capacity))
-                return Result.Fail("New capacity is less than total connector load.", ErrorType.InValidCapacity);
+            var result = group.Update(updateGroup.Name, updateGroup.Capacity);
+            if (result.IsSuccess)
+                await _groupRepository.UpdateAsync(group);
 
-            await _groupRepository.UpdateAsync(group);
-            return Result.Success();
+            return result.Value;
         }
 
-        public async Task<Result> DeleteGroupAsync(Guid id)
+        public async Task<bool> DeleteGroupAsync(Guid id)
         {
             var storedGroup = await _groupRepository.FindByIdAsync(id);
             if (storedGroup is null)
-                return Result.Fail($"group not found with Group Id {id}", ErrorType.NotFound);
+                return false;
 
             await _groupRepository.DeleteAsync(storedGroup);
-            return Result.Success();
+            return true;
         }
 
         public async Task<Result<IEnumerable<CreatedGroup>>> GetGroupsAsync()

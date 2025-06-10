@@ -1,4 +1,4 @@
-﻿using LearningDDD.Api.Services;
+﻿using LearningDDD.Domain.SeedWork;
 
 namespace LearningDDD.Api.Extensions
 {
@@ -15,16 +15,23 @@ namespace LearningDDD.Api.Extensions
 
                 return Results.Created($"{uri}/{result.Value}", new { id = result.Value });
             }
-                
+
             return Results.Problem(
             title: "Resource operation failed",
             detail: result.Error,
             statusCode: result.ErrorType switch
             {
-                ErrorType.NotFound => 404,
-                ErrorType.InValidCapacity => 400,
+                ErrorType.GroupNotFound => 404,
+                ErrorType.ChargeStationNotFound => 400,
+                ErrorType.ConnectorNotFound => 400,
+                ErrorType.GroupNameRequired => 400,
+                ErrorType.ChargeStationNameRequired => 400,
+                ErrorType.ChargeStationNameMustBeUnique => 400,
+                ErrorType.ChargeStationWithoutConnector => 400,
+                ErrorType.ConnectorNameRequired => 400,
+                ErrorType.CapacityNotGreaterThanZero => 400,
+                ErrorType.CapacityNotGreaterThanUsedCurrent => 400,
                 ErrorType.UniqueConnector => 409,
-                ErrorType.MinimumOneConnector => 400,
                 _ => 500
             });
         }
@@ -39,10 +46,17 @@ namespace LearningDDD.Api.Extensions
             detail: result.Error,
             statusCode: result.ErrorType switch
             {
-                ErrorType.NotFound => 404,
-                ErrorType.InValidCapacity => 400,
+                ErrorType.GroupNotFound => 404,
+                ErrorType.ChargeStationNotFound => 400,
+                ErrorType.ConnectorNotFound => 400,
+                ErrorType.GroupNameRequired => 400,
+                ErrorType.ChargeStationNameRequired => 400,
+                ErrorType.ChargeStationNameMustBeUnique => 400,
+                ErrorType.ChargeStationWithoutConnector => 400,
+                ErrorType.ConnectorNameRequired => 400,
+                ErrorType.CapacityNotGreaterThanZero => 400,
+                ErrorType.CapacityNotGreaterThanUsedCurrent => 400,
                 ErrorType.UniqueConnector => 409,
-                ErrorType.MinimumOneConnector => 400,
                 _ => 500
             });
         }

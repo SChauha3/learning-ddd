@@ -2,44 +2,42 @@
 using LearningDDD.Api.Dtos.Connector;
 using LearningDDD.Domain.Ports;
 using LearningDDD.Domain.Models;
+using LearningDDD.Domain.SeedWork;
 
 namespace LearningDDD.Api.Services.Connectors
 {
     public class ConnectorService : IConnectorService
     {
         private readonly IRepository<Group> _groupRepository;
+        private readonly IRepository<Connector> _connectorRepository;
 
-        public ConnectorService(IRepository<Group> groupRepository)
+        public ConnectorService(IRepository<Group> groupRepository, IRepository<Connector> connectorRepository)
         {
+            _connectorRepository = connectorRepository;
             _groupRepository = groupRepository;
         }
 
-        public async Task<Result<Guid>> CreateConnectorAsync(CreateConnector createConnector)
+        public async Task<Result<Connector>> CreateConnectorAsync(CreateConnector createConnector)
         {
             var group = await _groupRepository.FindAsync(
                 cs => cs.Id == Guid.Parse(createConnector.GroupId),
                 cs => cs.Include(c => c.ChargeStations));
 
             if (group is null)
-                return Result<Guid>.Fail("A Connector cannot exist in the domain without a Charge Station and group.", ErrorType.NotFound);
+                return Result<Connector>.Fail(
+                    "A Connector cannot exist in the domain without a Charge Station and group.", 
+                    ErrorType.GroupNotFound);
 
-            if (!group.IsChargeStationContextIdUnique(createConnector.ChargeStationContextId, Guid.Parse(createConnector.ChargeStationId)))
-                return Result<Guid>.Fail("Id must be unique within the context of a charge station with " +
-                    "(possible range of values from 1 to 5)", ErrorType.UniqueConnector);
-
-            if (!group.CanAddConnector(createConnector.MaxCurrent))
-                return Result<Guid>.Fail("Total connector max current would exceed group's capacity.", ErrorType.UniqueConnector);
-
-            var connectorId = group.AddConnectorToChargeStation(
+            var result = group.AddConnectorToChargeStation(
                 createConnector.ChargeStationContextId,
                 createConnector.MaxCurrent,
                 Guid.Parse(createConnector.ChargeStationId));
 
             await _groupRepository.AddAsync(group);
-            return Result<Guid>.Success(connectorId);
+            return result;
         }
 
-        public async Task<Result> UpdateConnectorAsync(Guid id, UpdateConnector updateConnector)
+        public async Task<Result<bool>> UpdateConnectorAsync(Guid id, UpdateConnector updateConnector)
         {
             var group = await _groupRepository.FindAsync(
                 c => c.Id == Guid.Parse(updateConnector.GroupId),
@@ -48,39 +46,35 @@ namespace LearningDDD.Api.Services.Connectors
                     .ThenInclude(cs => cs.Connectors));
 
             if (group is null)
-                return Result.Fail($"A Connector with id {id} does not belong to existing chargeStation.", ErrorType.NotFound);
+                return Result<bool>.Fail($"A Connector with id {id} does not belong to existing chargeStation.", ErrorType.GroupNotFound);
 
-            var result = group.UpdateConnectorMaxCurrent(
+            var result = group.UpdateConnector(
                 updateConnector.MaxCurrent,
                 Guid.Parse(updateConnector.ChargeStationId),
                 id);
 
-            if (!result)
-                return Result.Fail("Total connector max current would exceed group's capacity.", ErrorType.InValidCapacity);
+            if (result.IsSuccess)
+                await _groupRepository.UpdateAsync(group);
 
-            await _groupRepository.UpdateAsync(group);
-            return Result.Success();
+            return result;
         }
 
-        //public async Task<Result> DeleteConnectorAsync(Guid id)
-        //{
-        //    var connector = await _connectorRepository.FindAsync(
-        //        c => c.Id == id,
-        //        query => query
-        //            .Include(c => c.ChargeStation)
-        //            .ThenInclude(cs => cs.Group)
-        //            .Include(c => c.ChargeStation.Connectors));
+        public async Task<Result<bool>> DeleteConnectorAsync(Guid id, Guid chargeStationId, Guid groupId)
+        {
+            var group = await _groupRepository.FindAsync(
+                c => c.Id == groupId,
+                query => query
+                    .Include(c => c.ChargeStations)
+                    .ThenInclude(cs => cs.Connectors));
+            if (group is null)
+                return Result<bool>.Fail($"A Connector with id {id} does not belong to existing chargeStation.", ErrorType.GroupNotFound);
 
-        //    if (connector is null)
-        //        return Result.Fail($"Connector not found with id {id}.", ErrorType.NotFound);
+            var result = group.RemoveConnector(id, chargeStationId);
+            if (!result.IsSuccess || result.Value is null)
+                return Result<bool>.Fail(result.Error ?? "Unknown error occurred.", result.ErrorType ?? ErrorType.Unknown);
 
-        //    if (!connector.ChargeStation.CanRemoveConnector())
-        //        return Result.Fail("At least one connector is required per charge station.", ErrorType.MinimumOneConnector);
-
-        //    connector.ChargeStation.RemoveConnector(connector);
-
-        //    await _connectorRepository.DeleteAsync(connector);
-        //    return Result.Success();
-        //}
+            await _connectorRepository.DeleteAsync(result.Value);
+            return Result<bool>.Success(true);
+        }
     }
 }

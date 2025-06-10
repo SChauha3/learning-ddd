@@ -1,4 +1,4 @@
-﻿namespace LearningDDD.Api.Services
+﻿namespace LearningDDD.Domain.SeedWork
 {
     public class Result<T>
     {
@@ -25,34 +25,5 @@
 
         public static Result<T> Fail(string error, ErrorType errorType) =>
             new(default, false, error, errorType);
-    }
-
-    public class Result
-    {
-        public bool IsSuccess { get; }
-        public string? Error { get; }
-        public ErrorType? ErrorType { get; }
-
-        private Result(bool isSuccess, string? error, ErrorType? errorType)
-        {
-            IsSuccess = isSuccess;
-            Error = error;
-            ErrorType = errorType;
-        }
-
-        public static Result Success() =>
-            new(true, null, null);
-
-        public static Result Fail(string error, ErrorType errorType) =>
-            new(false, error, errorType);
-    }
-
-    public enum ErrorType
-    {
-        NotFound,
-        InValidCapacity,
-        MinimumOneConnector,
-        UniqueConnector,
-        Unknown
     }
 }

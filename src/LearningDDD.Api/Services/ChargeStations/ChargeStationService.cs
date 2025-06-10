@@ -1,6 +1,7 @@
 ﻿using LearningDDD.Api.Dtos.ChargeStation;
 using LearningDDD.Domain.Models;
 using LearningDDD.Domain.Ports;
+using LearningDDD.Domain.SeedWork;
 using Microsoft.EntityFrameworkCore;
 
 namespace LearningDDD.Api.Services.ChargeStations
@@ -18,43 +19,62 @@ namespace LearningDDD.Api.Services.ChargeStations
             _chargeStationRepository = chargeStationRepository;
         }
 
-        public async Task<Result<Guid>> CreateChargeStationAsync(CreateChargeStation createChargeStation)
+        public async Task<Result<ChargeStation>> CreateChargeStationAsync(CreateChargeStation createChargeStation)
         {
             var group = await _groupRepository.FindAsync(
                 q => q.Id == Guid.Parse(createChargeStation.GroupId),
                 q => q.Include(g => g.ChargeStations).ThenInclude(cs => cs.Connectors));
 
             if (group is null)
-                return Result<Guid>.Fail("The specified group was not found, and charge station cannot be created without a valid group", ErrorType.NotFound);
+                return Result<ChargeStation>.Fail(
+                    "The specified group was not found, and charge station cannot be created without a valid group", 
+                    ErrorType.GroupNotFound);
 
-            var chargeStationId = group.AddChargeStation(
+            var chargeStation = group.AddChargeStation(
                 createChargeStation.Name, 
                 createChargeStation.Connectors.Select(c => (c.ChargeStationContextId, c.MaxCurrent)));
 
             await _groupRepository.AddAsync(group);
-            return Result<Guid>.Success(chargeStationId);
+            return chargeStation;
         }
 
-        public async Task<Result> UpdateChargeStationAsync(Guid id, UpdateChargeStation updateChargeStation)
+        public async Task<Result<bool>> UpdateChargeStationAsync(Guid id, UpdateChargeStation updateChargeStation)
         {
             var group = await _groupRepository.FindByIdAsync(Guid.Parse(updateChargeStation.GroupId));
             if (group is null)
-                return Result.Fail($"Group with id {updateChargeStation.GroupId} not found.", ErrorType.NotFound);
+                return Result<bool>.Fail(
+                    $"Group with id {updateChargeStation.GroupId} not found.", 
+                    ErrorType.GroupNotFound);
 
-            group.UpdateChargeStation(id, updateChargeStation.Name);
+            var result = group.UpdateChargeStation(id, updateChargeStation.Name);
+            if(result.IsSuccess)
+                await _groupRepository.UpdateAsync(group);
 
-            await _groupRepository.UpdateAsync(group);
-            return Result.Success();
+            return result;
         }
 
-        public async Task<Result> DeleteChargeStationAsync(Guid id)
+        public async Task<Result<bool>> DeleteChargeStationAsync(Guid id, Guid groupId)
         {
-            var chargeStation = await _chargeStationRepository.FindByIdAsync(id);
-            if (chargeStation is null)
-                return Result.Fail("Charge station not found.", ErrorType.NotFound);
+            var group = await _groupRepository.FindByIdAsync(groupId);
+            if (group is null)
+                return Result<bool>.Fail(
+                    $"Group with id {groupId} not found.",
+                    ErrorType.GroupNotFound);
 
-            await _chargeStationRepository.DeleteAsync(chargeStation);
-            return Result.Success();
+            var result = group.RemoveChargeStation(id);
+
+            if (!result.IsSuccess || result.Value is null)
+            {
+                // Ensure both `result.Error` and `result.ErrorType` are non-null before calling `Fail`.
+                if (result.Error is not null && result.ErrorType.HasValue)
+                {
+                    return Result<bool>.Fail(result.Error, result.ErrorType.Value);
+                }
+                return Result<bool>.Fail("An unknown error occurred.", ErrorType.Unknown);
+            }
+
+            await _chargeStationRepository.DeleteAsync(result.Value);
+            return Result<bool>.Success(true);
         }
     }
 }
