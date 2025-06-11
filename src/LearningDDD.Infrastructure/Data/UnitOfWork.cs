@@ -1,13 +1,15 @@
 ﻿using LearningDDD.Domain.Interfaces;
 using LearningDDD.Domain.Models;
 using LearningDDD.Infrastructure.Persistent;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata;
 
 namespace LearningDDD.Infrastructure.Data
 {
     public class UnitOfWork : IUnitOfWork
     {
         private readonly AppDbContext _context;
-        private IRepository<Group>? _groups; // Nullable for lazy initialization
+        private IRepository<Group>? _groupRepository; // Nullable for lazy initialization
 
         public UnitOfWork(AppDbContext context)
         {
@@ -15,15 +17,12 @@ namespace LearningDDD.Infrastructure.Data
         }
 
         // Lazy initialization of repositories
-        public IRepository<Group> Groups
-        {
-            get { return _groups ??= new Repository<Group>(_context); }
-        }
+        public IRepository<Group> Groups => _groupRepository ?? new Repository<Group>(_context);
 
         // This is where all tracked changes are committed atomically
-        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public async Task<int> SaveChangesAsync()
         {
-            return await _context.SaveChangesAsync(cancellationToken);
+            return await _context.SaveChangesAsync();
         }
 
         private bool disposed = false;

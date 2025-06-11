@@ -11,14 +11,15 @@ namespace LearningDDD.Domain.Models
         public IReadOnlyCollection<Connector> Connectors => _connectors.AsReadOnly();
         private ChargeStation() { }
 
-        private ChargeStation(Guid id, string name, IList<Connector> connectors) : base(id)
+        private ChargeStation(Guid id, string name, IEnumerable<(int chargeStationContextId, int maxCurrent)> connectors) : base(id)
         {
             Name = name;
-            _connectors = connectors.ToList();
+            _connectors = connectors.Select(c => Connector.Create(c.chargeStationContextId, c.maxCurrent)).ToList();
+            ConnectorValidator.Validate(_connectors);
         }
 
-        internal static ChargeStation Create(string name, IList<Connector> connectors) =>
-            new ChargeStation(Guid.NewGuid(), name, connectors);
+        internal static ChargeStation Create(string name, IEnumerable<(int chargeStationContextId, int maxCurrent)> connectors) =>
+            new ChargeStation(Guid.Empty, name, connectors);
 
         internal void UpdateName(string name)
         {

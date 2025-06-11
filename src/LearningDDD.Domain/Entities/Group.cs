@@ -49,11 +49,7 @@ namespace LearningDDD.Domain.Models
             if (!connectors.Any())
                 return Result<ChargeStation>.Fail("Connectors cannot be null.", ErrorType.ChargeStationWithoutConnector);
 
-            var newConnectors = connectors.Select(c => Connector.Create(c.chargeStationContextId, c.maxCurrent)).ToList();
-
-            ConnectorValidator.Validate(newConnectors);
-
-            var chargeStation = ChargeStation.Create(name, newConnectors);
+            var chargeStation = ChargeStation.Create(name, connectors);
 
             _chargeStations.Add(chargeStation);
             return Result<ChargeStation>.Success(chargeStation);

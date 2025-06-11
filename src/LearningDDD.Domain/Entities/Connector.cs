@@ -14,7 +14,7 @@ namespace LearningDDD.Domain.Models
         }
 
         internal static Connector Create(int chargeStationContextId, int maxCurrent) =>
-            new Connector(Guid.NewGuid(), chargeStationContextId, maxCurrent);
+            new Connector(Guid.Empty, chargeStationContextId, maxCurrent);
 
         internal void Update(int newMaxCurrent) =>
             MaxCurrent = newMaxCurrent;

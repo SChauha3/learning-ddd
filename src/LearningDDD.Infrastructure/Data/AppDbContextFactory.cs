@@ -10,7 +10,7 @@ namespace LearningDDD.Infrastructure.Data
         {
             Batteries.Init();
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseSqlite("Data Source=app.db");
+            optionsBuilder.UseSqlite("Data Source=../LearningDDD.Infrastructure/app.db");
 
             return new AppDbContext(optionsBuilder.Options);
         }

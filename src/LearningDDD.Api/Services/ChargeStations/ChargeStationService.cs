@@ -36,7 +36,9 @@ namespace LearningDDD.Api.Services.ChargeStations
                 createChargeStation.Name, 
                 createChargeStation.Connectors.Select(c => (c.ChargeStationContextId, c.MaxCurrent)));
 
-            await _unitOfWork.SaveChangesAsync();
+            if(chargeStationCreationResult.IsSuccess)
+                await _unitOfWork.SaveChangesAsync();
+
             return chargeStationCreationResult;
         }
 

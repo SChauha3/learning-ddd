@@ -14,7 +14,7 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddValidators();
 builder.Services.AddAppServices();
-builder.Services.AddRepositories();
+builder.Services.AddUnitOfWork();
 builder.Services.AddSqlLite();
 
 var app = builder.Build();

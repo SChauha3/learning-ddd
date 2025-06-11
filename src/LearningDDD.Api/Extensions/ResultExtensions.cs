@@ -13,7 +13,7 @@ namespace LearningDDD.Api.Extensions
                     return Results.Ok(result.Value);
                 }
 
-                return Results.Created($"{uri}/{result.Value}", new { id = result.Value });
+                return Results.Created($"{uri}/{result.Value}", result.Value);
             }
 
             return Results.Problem(
